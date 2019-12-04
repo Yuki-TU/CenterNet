@@ -214,7 +214,10 @@ class Debugger(object):
 
   def show_all_imgs(self, pause=False, time=0):
     if not self.ipynb:
+      frame = []
       for i, v in self.imgs.items():
+        #frame = v
+        frame.append(v)
         cv2.imshow('{}'.format(i), v)
       if cv2.waitKey(0 if pause else 1) == 27:
         import sys
@@ -232,6 +235,7 @@ class Debugger(object):
         else:
           self.plt.imshow(v)
       self.plt.show()
+    return frame[0]
 
   def save_img(self, imgId='default', path='./cache/debug/'):
     cv2.imwrite(path + '{}.png'.format(imgId), self.imgs[imgId])

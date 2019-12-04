@@ -14,6 +14,11 @@ image_ext = ['jpg', 'jpeg', 'png', 'webp']
 video_ext = ['mp4', 'mov', 'avi', 'mkv']
 time_stats = ['tot', 'load', 'pre', 'net', 'dec', 'post', 'merge']
 
+#動画の書き込み
+fourcc = cv2.VideoWriter_fourcc(*'XVID')  #fourccを定義
+out = cv2.VideoWriter('output.avi',fourcc, 30.0, (1920,960))  #動画書込準備
+
+
 def demo(opt):
   os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpus_str
   opt.debug = max(opt.debug, 1)
@@ -26,8 +31,9 @@ def demo(opt):
     detector.pause = False
     while True:
         _, img = cam.read()
-        cv2.imshow('input', img)
-        ret = detector.run(img)
+        #cv2.imshow('input', img)   #input movie
+        ret, v = detector.run(img)
+        out.write(v)
         time_str = ''
         for stat in time_stats:
           time_str = time_str + '{} {:.3f}s |'.format(stat, ret[stat])
@@ -51,6 +57,7 @@ def demo(opt):
       for stat in time_stats:
         time_str = time_str + '{} {:.3f}s |'.format(stat, ret[stat])
       print(time_str)
+  out.release()  #保存
 if __name__ == '__main__':
   opt = opts().init()
   demo(opt)
