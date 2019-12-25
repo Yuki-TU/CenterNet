@@ -35,7 +35,7 @@ class PANO(data.Dataset):
     self.max_objs = 50
     self._valid_ids = [1, 2, 3]
     self.class_name = [
-      '__background__', 'pedestrian', 'car', 'cyclist']
+      '__background__', 'car', 'cyclist', 'pedestrian']
     self.cat_ids = {1:0, 2:1, 3:2}
     
     self._data_rng = np.random.RandomState(123)
@@ -56,6 +56,38 @@ class PANO(data.Dataset):
 
     print('Loaded {} {} samples'.format(split, self.num_samples))
 
+  def __len__(self):
+    return self.num_samples
+
+  def _to_float(self, x):
+    return float("{:.2f}".format(x))
+
+  def convert_eval_format(self, all_bboxes):
+    pass
+
+  def save_results(self, results, save_dir):
+    results_dir = os.path.join(save_dir, 'results')
+    if not os.path.exists(results_dir):
+      os.mkdir(results_dir)
+    for img_id in results.keys():
+      out_path = os.path.join(results_dir, '00{:06d}.txt'.format(img_id))   ##'00'add
+      f = open(out_path, 'w')
+      for cls_ind in results[img_id]:
+        for j in range(len(results[img_id][cls_ind])):
+          class_name = self.class_name[cls_ind]
+          f.write('{} 0.0 0 0.00'.format(class_name))
+          for i in range(4):
+            f.write(' {:.2f}'.format(results[img_id][cls_ind][j][i]))
+          f.write(' 0.00 0.00 0.00 0.00 0.00 0.00 0.00 {:.2f}'.format(results[img_id][cls_ind][j][4]))
+          f.write('\n')
+      f.close()
+
+  def run_eval(self, results, save_dir):
+    self.save_results(results, save_dir)
+    print("finish!!!You should validate!!")
+    print("created result file: {}".format(save_dir))
+
+"""
 ######pascalVOC validation
   def __len__(self):
     return self.num_samples
@@ -84,3 +116,4 @@ class PANO(data.Dataset):
     self.save_results(results, save_dir)
     os.system('python tools/reval.py ' + \
               '{}/results.json'.format(save_dir))
+"""
