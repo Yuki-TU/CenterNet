@@ -33,9 +33,10 @@ class PANO(data.Dataset):
       self.annot_path = os.path.join(self.data_dir, 
         'annotations', 'pano_{}.json').format(split)
     self.max_objs = 50
+    self._valid_ids = [1, 2, 3]
     self.class_name = [
-      '__background__', 'car', 'cyclist', 'pedestrian']
-    self.cat_ids = {1:2, 2:1, 3:0, 4:-3, 5:-3, 6:-2, 7:-99, 8:-99, 9:-1}
+      '__background__', 'pedestrian', 'car', 'cyclist']
+    self.cat_ids = {1:0, 2:1, 3:2}
     
     self._data_rng = np.random.RandomState(123)
     self._eig_val = np.array([0.2141788, 0.01817699, 0.00341571],
@@ -47,7 +48,6 @@ class PANO(data.Dataset):
     ], dtype=np.float32)
     self.split = split
     self.opt = opt
-    self.alpha_in_degree = False
 
     print('==> initializing pano {} data.'.format(split))
     self.coco = coco.COCO(self.annot_path)
@@ -56,6 +56,7 @@ class PANO(data.Dataset):
 
     print('Loaded {} {} samples'.format(split, self.num_samples))
 
+######pascalVOC validation
   def __len__(self):
     return self.num_samples
 
@@ -63,27 +64,23 @@ class PANO(data.Dataset):
     return float("{:.2f}".format(x))
 
   def convert_eval_format(self, all_bboxes):
-    pass
+    detections = [[[] for __ in range(self.num_samples)] \
+                  for _ in range(self.num_classes + 1)]
+    for i in range(self.num_samples):
+      img_id = self.images[i]
+      for j in range(1, self.num_classes + 1):
+        if isinstance(all_bboxes[img_id][j], np.ndarray):
+          detections[j][i] = all_bboxes[img_id][j].tolist()
+        else:
+          detections[j][i] = all_bboxes[img_id][j]
+    return detections
 
   def save_results(self, results, save_dir):
-    results_dir = os.path.join(save_dir, 'results')
-    if not os.path.exists(results_dir):
-      os.mkdir(results_dir)
-    for img_id in results.keys():
-      out_path = os.path.join(results_dir, '{:06d}.txt'.format(img_id))
-      f = open(out_path, 'w')
-      for cls_ind in results[img_id]:
-        for j in range(len(results[img_id][cls_ind])):
-          class_name = self.class_name[cls_ind]
-          f.write('{} 0.0 0'.format(class_name))
-          for i in range(len(results[img_id][cls_ind][j])):
-            f.write(' {:.2f}'.format(results[img_id][cls_ind][j][i]))
-          f.write('\n')
-      f.close()
+    json.dump(self.convert_eval_format(results),
+              open('{}/results.json'.format(save_dir), 'w'))
+
 
   def run_eval(self, results, save_dir):
     self.save_results(results, save_dir)
-    os.system('./tools/kitti_eval/evaluate_object_3d_offline ' + \
-              '../data/kitti/training/label_val ' + \
-              '{}/results/'.format(save_dir))
-    
+    os.system('python tools/reval.py ' + \
+              '{}/results.json'.format(save_dir))

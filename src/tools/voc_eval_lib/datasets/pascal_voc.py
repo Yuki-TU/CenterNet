@@ -24,21 +24,17 @@ from model.config import cfg
 
 
 class pascal_voc(imdb):
-  def __init__(self, image_set, year, use_diff=False):
-    name = 'voc_' + year + '_' + image_set
+  def __init__(self, image_set, year=None, use_diff=False):
+    name = 'pano_' + image_set
     if use_diff:
       name += '_diff'
     imdb.__init__(self, name)
     self._year = year
     self._image_set = image_set
     self._devkit_path = self._get_default_path()
-    self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
+    self._data_path = os.path.join(self._devkit_path, 'pano')
     self._classes = ('__background__',  # always index 0
-                     'aeroplane', 'bicycle', 'bird', 'boat',
-                     'bottle', 'bus', 'car', 'cat', 'chair',
-                     'cow', 'diningtable', 'dog', 'horse',
-                     'motorbike', 'person', 'pottedplant',
-                     'sheep', 'sofa', 'train', 'tvmonitor')
+                     'car', 'cyclist', 'pedestrian')
     self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
     self._image_ext = '.jpg'
     self._image_index = self._load_image_set_index()
@@ -93,7 +89,7 @@ class pascal_voc(imdb):
     """
     Return the default path where PASCAL VOC is expected to be installed.
     """
-    return os.path.join(cfg.DATA_DIR, 'voc', 'VOCdevkit')
+    return os.path.join(cfg.DATA_DIR, 'pano', 'VOCdevkit')
 
   def gt_roidb(self):
     """
@@ -195,7 +191,7 @@ class pascal_voc(imdb):
     path = os.path.join(
       self._devkit_path,
       'results',
-      'VOC' + self._year,
+      'pano',
       'Main',
       filename)
     return path
@@ -222,20 +218,21 @@ class pascal_voc(imdb):
   def _do_python_eval(self, output_dir=None):
     annopath = os.path.join(
       self._devkit_path,
-      'VOC' + self._year,
+      'pano',
       'Annotations',
       '{:s}.xml')
     imagesetfile = os.path.join(
       self._devkit_path,
-      'VOC' + self._year,
+      'pano',
       'ImageSets',
       'Main',
       self._image_set + '.txt')
     cachedir = os.path.join(self._devkit_path, 'annotations_cache')
     aps = []
     # The PASCAL VOC metric changed in 2010
-    use_07_metric = True if int(self._year) < 2010 else False
-    print('VOC07 metric? ' + ('Yes' if use_07_metric else 'No'))
+    #use_07_metric = True if int(self._year) < 2010 else False
+    #print('VOC07 metric? ' + ('Yes' if use_07_metric else 'No'))
+    use_07_metric = False
     if output_dir is not None and not os.path.isdir(output_dir):
       os.mkdir(output_dir)
     for i, cls in enumerate(self._classes):

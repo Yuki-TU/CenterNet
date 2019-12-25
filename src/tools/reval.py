@@ -33,7 +33,7 @@ def parse_args():
   parser.add_argument('--output_dir', help='results directory', type=str)
   parser.add_argument('--imdb', dest='imdb_name',
                       help='dataset to re-evaluate',
-                      default='voc_2007_test', type=str)
+                      default='pano', type=str)
   parser.add_argument('--matlab', dest='matlab_eval',
                       help='use matlab for evaluation',
                       action='store_true')
@@ -51,7 +51,7 @@ def parse_args():
 
 
 def from_dets(imdb_name, detection_file, args):
-  imdb = pascal_voc('test', '2007')
+  imdb = pascal_voc('val')
   imdb.competition_mode(args.comp_mode)
   imdb.config['matlab_eval'] = args.matlab_eval
   with open(os.path.join(detection_file), 'rb') as f:
